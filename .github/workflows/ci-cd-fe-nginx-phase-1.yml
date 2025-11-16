@@ -51,7 +51,8 @@ jobs:
           mkdir -p ~/.ssh
           echo "$FE_EC2_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          cat ~/.ssh/id_rsa
+          # (you can remove this in future, it dumps the key)
+          # cat ~/.ssh/id_rsa
 
           # Copy tarball to FE EC2
           scp -o StrictHostKeyChecking=no dist.tar.gz "${FE_EC2_USER}@${FE_EC2_HOST}:/tmp/fe-dist.tar.gz"
@@ -68,6 +69,11 @@ jobs:
           # Clean old content and unpack new build
           sudo rm -rf "${FE_TARGET_DIR:?}/"*
           sudo tar xzf /tmp/fe-dist.tar.gz -C "$FE_TARGET_DIR"
+
+          # >>> Normalize ownership + permissions for NGINX <<<
+          sudo chown -R nginx:nginx "$FE_TARGET_DIR"
+          sudo find "$FE_TARGET_DIR" -type d -exec chmod 755 {} \;
+          sudo find "$FE_TARGET_DIR" -type f -exec chmod 644 {} \;
 
           # Clean up temp file
           sudo rm -f /tmp/fe-dist.tar.gz
