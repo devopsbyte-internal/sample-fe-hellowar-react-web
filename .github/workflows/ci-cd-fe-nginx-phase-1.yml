@@ -51,8 +51,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "$FE_EC2_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          # (you can remove this in future, it dumps the key)
-          # cat ~/.ssh/id_rsa
 
           # Copy tarball to FE EC2
           scp -o StrictHostKeyChecking=no dist.tar.gz "${FE_EC2_USER}@${FE_EC2_HOST}:/tmp/fe-dist.tar.gz"
@@ -61,7 +59,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no "${FE_EC2_USER}@${FE_EC2_HOST}" "bash -s" << 'EOF'
           set -e
 
-          FE_TARGET_DIR="${FE_TARGET_DIR:-/var/www/hellowar}"
+          FE_TARGET_DIR="${FE_TARGET_DIR:-/srv/hellowar}"
 
           # Ensure target dir exists
           sudo mkdir -p "$FE_TARGET_DIR"
@@ -72,9 +70,12 @@ jobs:
 
           # >>> Normalize ownership + permissions for NGINX <<<
           sudo chown -R nginx:nginx "$FE_TARGET_DIR"
-          sudo find "$FE_TARGET_DIR" -type d -exec chmod 755 {} \;
-          sudo find "$FE_TARGET_DIR" -type f -exec chmod 644 {} \;
+
+          # chmod -R will apply same perms to both dir & files
+          sudo find "$FE_TARGET_DIR" -type d -exec chmod 750 {} \;
+          sudo find "$FE_TARGET_DIR" -type f -exec chmod 640 {} \;
 
           # Clean up temp file
           sudo rm -f /tmp/fe-dist.tar.gz
           EOF
+
